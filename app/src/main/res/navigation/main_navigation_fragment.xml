@@ -9,5 +9,14 @@
         android:id="@+id/usersFragment"
         android:name="com.celis.ceibaapplication.ui.fragments.UsersFragment"
         android:label="UsersFragment"
-        tools:layout="@layout/fragment_users"/>
+        tools:layout="@layout/fragment_users">
+        <action
+            android:id="@+id/action_usersFragment_to_userPostsFragment"
+            app:destination="@id/userPostsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/userPostsFragment"
+        android:name="com.celis.ceibaapplication.ui.fragments.UserPostsFragment"
+        android:label="UserPostsFragment"
+        tools:layout="@layout/fragment_user_posts"/>
 </navigation>

@@ -6,14 +6,22 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.celis.ceibaapplication.R
 import com.celis.ceibaapplication.adapters.UsersRvAdapter
 import com.celis.ceibaapplication.databinding.FragmentUsersBinding
 import com.celis.ceibaapplication.persistence.model.User
+import com.celis.ceibaapplication.ui.dialogs.LoadingPopUpDialog
 import com.celis.ceibaapplication.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class UsersFragment : Fragment() {
@@ -33,9 +41,28 @@ class UsersFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.getUserList().observe(viewLifecycleOwner){
-            viewModel.userList.addAll(it)
-            initUserList()
+        viewModel.getUserListFromDB().observe(viewLifecycleOwner){
+            if (it.isEmpty()){
+                requestUserListFromApi()
+            }else{
+                viewModel.userList.apply {
+                    clear()
+                    addAll(it)
+                }
+                initUserList()
+            }
+        }
+    }
+
+    private fun requestUserListFromApi() {
+        LoadingPopUpDialog.startLoading(requireContext())
+        viewModel.getUserListFromApi().observe(viewLifecycleOwner) {
+            viewModel.insertUsersIntoDB(it).invokeOnCompletion {
+                lifecycleScope.launch(Dispatchers.Main) {
+                    LoadingPopUpDialog.closePopup()
+                    initUserList()
+                }
+            }
         }
     }
 
@@ -45,13 +72,17 @@ class UsersFragment : Fragment() {
             usersAdapter = UsersRvAdapter(localUserList)
             usersAdapter.userCallback = object: UsersRvAdapter.UserCallback {
                 override fun showUserPublications(user: User) {
-
+                    navigateToUserPublications(user)
                 }
             }
             layoutManager = LinearLayoutManager(requireContext())
             adapter = usersAdapter
         }
         initSearch()
+    }
+
+    private fun navigateToUserPublications(user: User) {
+        findNavController().navigate(R.id.action_usersFragment_to_userPostsFragment, bundleOf("user" to user))
     }
 
     private fun initSearch() {

@@ -1,5 +1,6 @@
 package com.celis.ceibaapplication.di
 
+import com.celis.ceibaapplication.persistence.database.dao.UserDao
 import com.celis.ceibaapplication.persistence.network.NetworkConstants
 import com.celis.ceibaapplication.persistence.network.services.UserService
 import com.celis.ceibaapplication.repository.UserRepository
@@ -41,6 +42,6 @@ object ApiModule {
 
     @Singleton
     @Provides
-    fun providesUserRepository(userService: UserService) = UserRepository(userService)
+    fun providesUserRepository(userService: UserService, userDao: UserDao) = UserRepository(userService, userDao)
 
 }
